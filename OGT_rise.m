@@ -7,7 +7,7 @@ output = {zeros(50,2)};
 for k = 1:length(myFiles)
     baseFileName = myFiles(k).name;
     fullFileName = fullfile(myDir, baseFileName);
-    Array = csvread(baseFileName, 1, 0);
+    Array = csvread(fullFileName, 1, 0);
     col1 = Array(:, 1);
     col2 = Array(:, 2);
     plot(col1, col2)
@@ -18,5 +18,4 @@ for k = 1:length(myFiles)
     output{k, 2} = risetime(col2,col1);
     disp(fullFileName)
 end    
-
 cell2csv(myDir+"risetimes.csv", output)
