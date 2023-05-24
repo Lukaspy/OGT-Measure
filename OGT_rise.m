@@ -1,3 +1,4 @@
+
 myDir = uigetdir; %gets directory
 myFiles = dir(fullfile(myDir,'*.csv')); %gets all csv files in struct
 output = {zeros(50,2)};
@@ -18,4 +19,4 @@ for k = 1:length(myFiles)
     disp(fullFileName)
 end    
 
-cell2csv("test.csv", output)
+cell2csv(myDir+"risetimes.csv", output)
