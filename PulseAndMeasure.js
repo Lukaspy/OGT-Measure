@@ -11,16 +11,23 @@ Wavegen.Channel1.Simple.Phase.value = 180;
 Wavegen.Channel1.States.Auto.value = 1;
 Wavegen.Channel1.States.Repeat.value = 1;
 Wavegen.Channel1.Simple.Amplitude.value = 3.3;
+Wavegen.Channel1.Simple.Period.text = "3ms"
 
 Scope.Trigger.Trigger.text = "Repeated";
 Scope.Trigger.Type.text = "Edge";
 Scope.Trigger.Condition.text = "Either";
 Scope.Trigger.Source.text = "Wavegen 1";
+Scope.
 
-Scope.single();
-wait(.1);
-Wavegen.run();
-Scope1.wait();
+var baseFile = Tool.getText("Filename/directory")
+var repeat =  Tool.getText("Repeat times?")
+for (var i = 1; i <= repeat; i++) {
+    Scope.single();
+    wait(.1);
+    Wavegen.run();
+    Scope1.wait();
+    Scope1.Export("/home/lukas/Documents/CampbellResearch/"+baseFile+i.toString()+".csv", szView = "", fComments = false, fHeader = true, fLabel = true, fHeaderAsComment = false, szNotes = "")
+    wait(1);
+}
 
 
-Scope1.Export("/home/lukas/Documents/CampbellResearch/"+Tool.getText("Filename/directory")+".csv", szView = "", fComments = false, fHeader = true, fLabel = true, fHeaderAsComment = false, szNotes = "")
