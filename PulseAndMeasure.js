@@ -7,7 +7,6 @@ Wavegen.Channel1.Mode.text = "Simple";
 Wavegen.Synchronization.text = "Independent"
 Wavegen.Channel1.Simple.Type.text = "Pulse";
 Wavegen.Channel1.Simple.Frequency.value = 1000;
-Wavegen.Channel1.Simple.Phase.value = 180;
 Wavegen.Channel1.States.Auto.value = 1;
 Wavegen.Channel1.States.Repeat.value = 1;
 Wavegen.Channel1.Simple.Amplitude.value = 3.3;
@@ -18,7 +17,7 @@ Scope.Trigger.Type.text = "Edge";
 Scope.Trigger.Condition.text = "Either";
 Scope.Trigger.Source.text = "Wavegen 1";
 
-var save_user = Tool.question("Save?");
+var save_user = Tool.question("Save Aquisitions?");
 if (save_user) {
     var baseFile = Tool.getSaveFile("Filename/Directoty", "~/Documents/CampbellResearch")//Tool.getText("Filename/directory")
 }
@@ -29,8 +28,9 @@ print(baseFile)
 
 //Pulse width in percentage
 var t1_user = 10;
-var t3_user = 5;
-var t4_user = 1/10;
+var t2_user = 20;
+var t3_user = 20;
+var t4_user = 1/100;
 
 function pulseAndCapture(save) {
     Scope1.single();
@@ -44,6 +44,8 @@ function pulseAndCapture(save) {
 
 function generatePulse(t1,t3,t4) {
         generated = [];
+        
+        //scale times and convert to decimals 
         t1 *= 4096/100;
         t3 *= 4096/100;
 
@@ -66,12 +68,46 @@ function generatePulse(t1,t3,t4) {
         
 }
 
+function generateRamps(t1, t2) {
+//t1 is the ramp duration
+//t2 is the length of steady state (once ramp reaches 1). Default is 0
+//returns a list of values ranging from 0 - 1. 
+    generated = []
+    //scale times to percentages and 4096 samples 
+    t1 *= 4096/100;
+    t2 *= 4096/100;
+    rate = 1/t1
+    
+    //generate first ramp
+    for (var i = 0; i< t1; i++) {
+        generated[Math.round(i)] = i*rate;
+    }
+    
+    //generate steadystate (if used)
+    for (var i = t1; i <= t1+t2; i++) {
+        generated[Math.round(i)] = 1
+        print("here " + i)
+    }
+    
+    //generate second pulse
+    var j = 0
+    for (var i = t1+t2; i <= t1+t1+t2; i++) {
+        generated[Math.round(i)] = (j)*rate;
+        j++
+    }
 
-if (Tool.question("Arb Pulses?")) {
+    //generate second steadystate (if used)
+    for (var i = t1+t1+t2; i <= t1+t1+t2+t2; i++) {
+        generated[Math.round(i)] = 1
+    }
+    return generated
+}
+
+
+if (Tool.question("2 Pulses?")) {
     Wavegen.Channel1.Mode.text = "Custom";
     t4_factor = t4_user
     for (var i = 1; i <= repeat; i++) {
-        print("dt = " + t4_factor);
         arbPulse = generatePulse(t1_user, t3_user, t4_factor);
         Wavegen.Custom.set("pulse" + i, arbPulse);
         Wavegen.Channel1.Mode.text = "Custom";
@@ -83,10 +119,25 @@ if (Tool.question("Arb Pulses?")) {
         t4_factor *= 2;
     }
 
-} else{
+} else if (Tool.question("2 ramps")) {
+    Wavegen.Channel1.Mode.text = "Custom";
+    for (var i = 1; i <= repeat; i++) {
+        arbPulse = generateRamps(t1_user, t2_user)
+        Wavegen.Custom.set("ramp" + i, arbPulse);
+        Wavegen.Channel1.Mode.text = "Custom";
+        Wavegen.Channel1.Custom.Type.text = "ramp" + i;
+        pulseAndCapture(save_user);
+        wait(parseInt(delay));
+    }
+
+}
+
+else{
     for (var i = 1; i <= repeat; i++) {
         pulseAndCapture();
-        wait(parseInt(delay));
+        if (i != repeat) {
+            wait(parseInt(delay));
+        }
     }
 }
 
