@@ -27,9 +27,9 @@ print(baseFile)
 
 
 //Pulse width in percentage
-var t1_user = 10;
-var t2_user = 20;
-var t3_user = 20;
+var t1_user = 15;
+var t2_user = 5;
+var t3_user = 0.5;
 var t4_user = 1/100;
 
 function pulseAndCapture(save) {
@@ -103,6 +103,66 @@ function generateRamps(t1, t2) {
     return generated
 }
 
+function tripleRamp(t1, t2, t3) {
+    generated = []
+
+    t1 *= 100
+    t2 *= 100
+    t3 *= 100
+    rate = 1/t1
+    offset = .25; 
+    
+    //Generate first ramp
+    for (var i = 0; i < t1; i++) {
+        generated[Math.round(i)] = (i*rate)+.25;
+    }
+
+    //generate first steadystate (if used)
+    for (var i = t1; i <= t1+t2; i++) {
+        generated[Math.round(i)] = 1
+    }
+
+    //generate ramp spacing
+    for (var i = t1+t2; i <= t1+t2+t3; i++) {
+            generated[Math.round(i)] = 0;
+    }
+
+    //Generate second ramp
+    var j = 0;
+    for (var i = t1+t2+t3; i <= (2*t1)+t2+t3; i++) {
+        generated[Math.round(i)] = (j*rate)+.25;
+        j++
+    }
+    
+    //Generate Steady State 2
+    for (var i = (2*t1)+t2+t3; i <= (2*t1)+(2*t2)+t3; i++) {
+        generated[Math.round(i)] = 1;
+    }
+    
+    //generate ramp spacing 2
+    for (var i = (2*t1)+(2*t2)+t3; i <= (2*t1)+(2*t2)+(2*t3); i++) {
+            generated[Math.round(i)] = 0;
+    }
+
+    //generate ramp 3
+    var j = 0;
+    for (var i = (2*t1)+(2*t2)+(2*t3); i <= (3*t1)+(2*t2)+(2*t3); i++) {
+        generated[Math.round(i)] = (j*rate)+.25;
+        j++
+    }
+    
+    //generate steadystate 3
+    for (var i = (3*t1)+(2*t2)+(2*t3); i <= (3*t1)+(3*t2)+(2*t3); i++) {
+        generated[Math.round(i)] = 1;
+    }
+
+    //zero extra space
+    for (var i = (3*t1)+(3*t2)+(2*t3); i <= 10000; i++) {
+        generated[Math.round(i)] = 0;
+    } 
+
+    return generated
+}
 
 if (Tool.question("2 Pulses?")) {
     Wavegen.Channel1.Mode.text = "Custom";
@@ -130,9 +190,33 @@ if (Tool.question("2 Pulses?")) {
         wait(parseInt(delay));
     }
 
-}
+} else if (Tool.question("3 ramps")) {
+    Wavegen.Channel1.Mode.text = "Custom";
+    for (var i = 1; i <= repeat; i++) {
+        print(i);
+        var arbPulse = [];
+        switch(i) {
+            case 1:
+                arbPulse = tripleRamp(t1_user, t2_user, 0);
+                break;
+            case 2:
+                arbPulse = tripleRamp(t1_user, t2_user, t3_user);
+                break;
+            case 3:
+                arbPulse = tripleRamp(t1_user, t2_user, t3_user*5);
+                break;
+            case 4:
+                arbPulse = tripleRamp(t1_user, t2_user, t3_user*15);
+                break;
 
-else{
+        }
+        Wavegen.Custom.set("ramp" + i, arbPulse);
+        Wavegen.Channel1.Mode.text = "Custom";
+        Wavegen.Channel1.Custom.Type.text = "ramp" + i;
+        pulseAndCapture(save_user);
+        wait(parseInt(delay));
+    }
+} else {
     for (var i = 1; i <= repeat; i++) {
         pulseAndCapture();
         if (i != repeat) {
